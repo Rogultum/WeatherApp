@@ -1,5 +1,5 @@
 import { Skia, SkPath, Canvas, Line, vec, Path } from "@shopify/react-native-skia"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 
 import { scaleLinear, scaleTime, line, curveBasis } from "d3"
 
@@ -28,9 +28,10 @@ interface GraphData {
 }
 
 export const WeatherScreen = () => {
-  const GRAPH_HEIGHT = 200
+  const GRAPH_HEIGHT = 150
   const GRAPH_WIDTH = 370
 
+  const [currWeather, setCurrWeather] = useState()
   const [weather, setWeather] = useState()
   const [humidity, setHumidity] = useState("")
   const [wind, setWind] = useState()
@@ -40,7 +41,7 @@ export const WeatherScreen = () => {
     const min = Math.min(...data.map((val) => val.value))
     const max = Math.max(...data.map((val) => val.value))
 
-    const getYAxis = scaleLinear().domain([0, max]).range([GRAPH_HEIGHT, 35])
+    const getYAxis = scaleLinear().domain([min, max]).range([GRAPH_HEIGHT, 35])
 
     const getXAxis = scaleTime()
       .domain([new Date(2000, 1, 1), new Date(2000, 1, 15)])
@@ -81,28 +82,30 @@ export const WeatherScreen = () => {
   const graphData = makeGraph(wData)
 
   const getCurrentWeather = async () => {
-    await axios
-      .get(`${BASE_URL}/forecast.json?key=${API_KEY}&q=LONDON&aqi=yes`)
-      .then((response) => {
-        const res = response.data.forecast.forecastday[0]
-        // console.log(res.hour)
-        const arr = []
-        res.hour.map((item) => {
-          arr.push(item.feelslike_c)
-        })
-
-        setWeather(arr)
-        setHumidity(res.day.avghumidity.toString())
-        setWind(res.day.maxwind_kph.toString())
-        setQIndex(res.day.air_quality["us-epa-index"])
+    await axios.get(`${BASE_URL}/forecast.json?key=${API_KEY}&q=RIO&aqi=yes`).then((response) => {
+      const res = response.data.forecast.forecastday[0]
+      const arr = []
+      res.hour.map((item) => {
+        arr.push(item.feelslike_c)
       })
+
+      setWeather(arr)
+      setCurrWeather(res.day.avgtemp_c)
+      setHumidity(res.day.avghumidity.toString())
+      setWind(res.day.maxwind_kph.toString())
+      setQIndex(res.day.air_quality["us-epa-index"])
+    })
   }
+
+  useEffect(() => {
+    getCurrentWeather()
+  }, [])
 
   return (
     <Screen contentContainerStyle={$container} safeAreaEdges={["top"]} preset="scroll">
       <SafeAreaView style={$container}>
         <View style={$degreeContainer}>
-          <Text onPress={getCurrentWeather} style={$degreeNum} text="35" size="xxl" />
+          <Text onPress={getCurrentWeather} style={$degreeNum} text={"35"} size="xxl" />
           <Text text="°" size="xl" style={$degreeSym} />
         </View>
         <AutoImage style={$image} maxWidth={250} source={require("../../assets/images/sun.png")} />
@@ -113,19 +116,12 @@ export const WeatherScreen = () => {
           <Icon containerStyle={$icon} size={26} icon="wind" />
           <Icon containerStyle={$icon} size={26} icon="air" />
         </View>
-        <View style={$iconContainer}>
+        <View style={$iconTextContainer}>
           <Text size="md" text={humidity} />
           <Text size="md" text={wind} />
           <Text size="md" text={qIndex} />
         </View>
-        <View style={$iconContainer}>
-          {weather &&
-            weather.map((w: string, index: number) => {
-              if (index % 3 === 0 && index <= 15) {
-                return <Text key={index} text={w} size="xxs" />
-              } else return <></>
-            })}
-        </View>
+
         <Canvas
           style={[
             {
@@ -138,6 +134,14 @@ export const WeatherScreen = () => {
           <Line strokeWidth={0.5} color="lightGrey" p1={vec(10, 130)} p2={vec(400, 130)} />
           <Path strokeWidth={2.5} color="black" path={graphData.curve} style="stroke" />
         </Canvas>
+        <View style={$weatherPoints}>
+          {weather &&
+            weather.map((w: string, index: number) => {
+              if (index % 3 === 0 && index <= 15) {
+                return <Text key={index} text={w} size="xxs" />
+              } else return <></>
+            })}
+        </View>
       </SafeAreaView>
     </Screen>
   )
@@ -176,6 +180,14 @@ const $icon: ViewStyle = {
   borderRadius: 20,
   padding: 5,
 }
+const $iconTextContainer: ViewStyle = {
+  width: "100%",
+  flexDirection: "row",
+  justifyContent: "space-evenly",
+  bottom: -80,
+  marginBottom: 12,
+  // left: -5,
+}
 const $image: ImageStyle = {
   zIndex: 1,
   position: "absolute",
@@ -186,4 +198,9 @@ const $image: ImageStyle = {
 }
 const $canvas = {
   bottom: -35,
+}
+const $weatherPoints: ViewStyle = {
+  width: "100%",
+  flexDirection: "row",
+  justifyContent: "space-evenly",
 }

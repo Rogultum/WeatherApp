@@ -109,7 +109,7 @@ export const iconRegistry = {
   x: require("../../assets/icons/x.png"),
   humidity: require("../../assets/icons/humidity.png"),
   wind: require("../../assets/icons/wind.png"),
-  air: require("../../assets/icons/air.png"),
+  air: require("../../assets/icons/air2.png"),
 }
 
 const $imageStyle: ImageStyle = {
