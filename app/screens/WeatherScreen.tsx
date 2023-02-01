@@ -31,7 +31,10 @@ export const WeatherScreen = () => {
   const GRAPH_HEIGHT = 200
   const GRAPH_WIDTH = 370
 
-  const [weather, setWeather] = useState([])
+  const [weather, setWeather] = useState()
+  const [humidity, setHumidity] = useState("")
+  const [wind, setWind] = useState()
+  const [qIndex, setQIndex] = useState()
 
   const makeGraph = (data: DataPoint[]): GraphData => {
     const min = Math.min(...data.map((val) => val.value))
@@ -57,21 +60,42 @@ export const WeatherScreen = () => {
     }
   }
 
-  const graphData = makeGraph(originalData)
+  const wData = [
+    { date: "2000-02-01T05:00:00.000Z", value: weather ? weather[3] : 1 },
+    { date: "2000-02-02T05:00:00.000Z", value: weather ? weather[3] : 1 },
+    { date: "2000-02-03T05:00:00.000Z", value: weather ? weather[3] : 1 },
+    { date: "2000-02-04T05:00:00.000Z", value: weather ? weather[6] : 1 },
+    { date: "2000-02-05T05:00:00.000Z", value: weather ? weather[6] : 1 },
+    { date: "2000-02-06T05:00:00.000Z", value: weather ? weather[6] : 1 },
+    { date: "2000-02-07T05:00:00.000Z", value: weather ? weather[9] : 1 },
+    { date: "2000-02-08T05:00:00.000Z", value: weather ? weather[9] : 1 },
+    { date: "2000-02-09T05:00:00.000Z", value: weather ? weather[9] : 1 },
+    { date: "2000-02-10T05:00:00.000Z", value: weather ? weather[12] : 1 },
+    { date: "2000-02-11T05:00:00.000Z", value: weather ? weather[12] : 1 },
+    { date: "2000-02-12T05:00:00.000Z", value: weather ? weather[12] : 1 },
+    { date: "2000-02-13T05:00:00.000Z", value: weather ? weather[15] : 1 },
+    { date: "2000-02-14T05:00:00.000Z", value: weather ? weather[15] : 1 },
+    { date: "2000-02-15T05:00:00.000Z", value: weather ? weather[15] : 1 },
+  ]
+
+  const graphData = makeGraph(wData)
 
   const getCurrentWeather = async () => {
     await axios
       .get(`${BASE_URL}/forecast.json?key=${API_KEY}&q=LONDON&aqi=yes`)
       .then((response) => {
-        setWeather(response.data.forecast.forecastday.hour)
-      })
-    console.log(weather)
+        const res = response.data.forecast.forecastday[0]
+        // console.log(res.hour)
+        const arr = []
+        res.hour.map((item) => {
+          arr.push(item.feelslike_c)
+        })
 
-    // console.log(
-    //   weather.map((h) => {
-    //     console.log(h)
-    //   }),
-    // )
+        setWeather(arr)
+        setHumidity(res.day.avghumidity.toString())
+        setWind(res.day.maxwind_kph.toString())
+        setQIndex(res.day.air_quality["us-epa-index"])
+      })
   }
 
   return (
@@ -88,6 +112,19 @@ export const WeatherScreen = () => {
           <Icon containerStyle={$icon} size={26} icon="humidity" />
           <Icon containerStyle={$icon} size={26} icon="wind" />
           <Icon containerStyle={$icon} size={26} icon="air" />
+        </View>
+        <View style={$iconContainer}>
+          <Text size="md" text={humidity} />
+          <Text size="md" text={wind} />
+          <Text size="md" text={qIndex} />
+        </View>
+        <View style={$iconContainer}>
+          {weather &&
+            weather.map((w: string, index: number) => {
+              if (index % 3 === 0 && index <= 15) {
+                return <Text key={index} text={w} size="xxs" />
+              } else return <></>
+            })}
         </View>
         <Canvas
           style={[
