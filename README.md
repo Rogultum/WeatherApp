@@ -4,12 +4,8 @@
 
 ### Made with the boilerplate that [Infinite Red](https://infinite.red) uses as a way to test bleeding-edge changes to our React Native stack.
 
-Currently includes:
-
-- React Native
-- React Navigation
-- MobX State Tree
-- TypeScript
+- For the line chart: React Native Skia + D3.js
+- Weather Api: https://www.weatherapi.com/
 
 #### - Design inspired by https://dribbble.com/shots/19474746-Weather
 
